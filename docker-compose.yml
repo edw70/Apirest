@@ -1,0 +1,34 @@
+version: '3.8'
+services:
+  api:
+    build: 
+      dockerfile: Dockerfile
+    ports:
+      - 80:80
+    volumes:
+      - type: bind
+        source: ./api
+        target: /var/www/html
+      - type: bind
+        source: ./apache2/apache2.conf
+        target: /etc/apache2/apache2.conf
+    env_file:
+      - ./sql/.env
+    depends_on:
+      - mysql
+  mysql:
+    image: mysql
+    ports:
+      - 3307:3306
+    env_file:
+      - ./sql/.env
+    volumes:
+      - type: volume
+        source: php-apirest-vol
+        target: /var/lib/mysql
+      - type: bind
+        source: ./sql
+        target: /home
+    
+volumes:
+    php-apirest-vol: 
