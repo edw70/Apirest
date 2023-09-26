@@ -10,7 +10,7 @@ services:
         source: ./api
         target: /var/www/html
       - type: bind
-        source: ./apache2/apache2.conf
+        source: ./api/apache2/apache2.conf
         target: /etc/apache2/apache2.conf
     env_file:
       - ./sql/.env
