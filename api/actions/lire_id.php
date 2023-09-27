@@ -1,4 +1,9 @@
 <?php
+ // Inclure les fichiers et instancier la base de données
+include_once './database/connexion_db.php';
+include_once './modeles/categories.php';
+include_once './modeles/technologies.php';
+include_once './modeles/ressources.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'GET') {
     // Obtenir l'URL demandée par l'utilisateur
@@ -18,11 +23,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         if (!empty($segments[1])) {
         $id = $segments[1];
 
-        // Inclure les fichiers et instancier la base de données
-        include_once './database/connexion_db.php';
-        include_once './modeles/categories.php';
-        include_once './modeles/technologies.php';
-        include_once './modeles/ressources.php';
 
         $database = new database();
         $db = $database->getConnection();

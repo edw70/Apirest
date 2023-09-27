@@ -1,4 +1,9 @@
 <?php
+// Inclure les fichiers et instancier la base de données
+include_once './database/connexion_db.php';
+include_once './modeles/categories.php';
+include_once './modeles/technologies.php';
+include_once './modeles/ressources.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Obtenir l'URL demandée par l'utilisateur
@@ -12,16 +17,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Diviser l'URI en segments
     $segments = explode('/', trim($uri, '/'));
 
-    // Assurez-vous qu'il y a au moins trois segments
-    if (count($segments) >= 3) {
+    // Assurez-vous qu'il y a au moins deux segments
+    if (count($segments) >= 1) {
         $table = $segments[0];
-        $action = $segments[1];
-
-        // Inclure les fichiers et instancier la base de données
-        include_once './database/connexion_db.php';
-        include_once './modeles/categories.php';
-        include_once './modeles/technologies.php';
-        include_once './modeles/ressources.php';
 
         $database = new database();
         $db = $database->getConnection();
@@ -29,11 +27,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         try {
             // Créez une instance du modèle approprié
             $model = new $table($db);
-            
 
-            if ($action === 'create' && method_exists($model, 'create')) {
-                // Appeler la méthode "creer()" si l'action est "create" et que la méthode existe
-                if ($model->create()) {
+            if (method_exists($model, 'create')) {
+                // Lire les données de la requête POST depuis php://input
+                $data = json_decode(file_get_contents("php://input"));
+                // Vérifiez si les données sont valides 
+            //    var_dump($data);
+                if ($data && $model->create($data)) { // Utilisez la fonction create
                     http_response_code(201); // Created
                     echo json_encode(["message" => "La ressource a été créée avec succès"]);
                 } else {
@@ -58,14 +58,4 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Mauvaise méthode, on gère l'erreur
     http_response_code(405); // Method Not Allowed
     echo json_encode(["message" => "La méthode n'est pas autorisée"]);
-}
-
-
-
-
-
-
-
-
-
 }

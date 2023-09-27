@@ -1,18 +1,5 @@
 <?php
 
-//headers requis
-//acces depuis n'importe quel site ou appareil (*)
-//header("Access-Control-Allow-Origin: *");
-
-//Format des données envoyées
-//header("Content-Type: application/json; charset=UTF8");
-
-//methode autorisée
-//header("Access-Control-Allow-Methods: GET");
-
-//durée de vie de la requête
-//header("Access-Control-Max-Age: 3600"); //1h c'est le cache
-
 if ($_SERVER['REQUEST_METHOD'] == 'GET') {
     // Obtenir l'URL demandée par l'utilisateur
     $uri = $_SERVER['REQUEST_URI'];

@@ -9,7 +9,7 @@ header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF8");
 
 //methode autorisée
-header("Access-Control-Allow-Methods: GET");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE");
 
 //durée de vie de la requête
 header("Access-Control-Max-Age: 3600"); //1h c'est le cache
@@ -56,22 +56,21 @@ $routes = [
     'GET:/' => 'accueil',
     'GET:/technologies' => 'getTables',
     'GET:/technologies/{id}' => 'getId',
-    'POST:/technologies/create' => 'createT',
-    'PUT:/technologies/{id}/update' => 'updateT',
+    'POST:/technologies' => 'createT',
+    'PUT:/technologies/{id}' => 'updateT',
+    'DELETE:/technologies/{id}' => 'deleteId',
 
     'GET:/ressources' => 'getTables',
     'GET:/ressources/{id}' => 'getId',
-    'POST:/ressources/create' => 'createT',
-    'PUT:/ressources/{id}/update' => 'updateT',
+    'POST:/ressources' => 'createT',
+    'PUT:/ressources/{id}' => 'updateT',
+    'DELETE:/ressources/{id}' => 'deleteId',
 
     'GET:/categories' => 'getTables',
     'GET:/categories/{id}' => 'getId',
-    'POST:/categories/create' => 'createT',
-    'PUT:/catégories/{id}/update' => 'updateT',
-
-    
-    
-    'DELETE:/technologies/{id}' => 'deleteTechnologies',///a modifier
+    'POST:/categories' => 'createT',
+    'PUT:/categories/{id}' => 'updateT',
+    'DELETE:/categories/{id}' => 'deleteId',
     
 ];
 

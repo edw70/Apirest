@@ -11,7 +11,7 @@ class technologies{
     public $categories_idcategories;
 
 
-     /**
+    /**
      * Constructeur avec $db pour la connexion à la base de données
      *
      * @param $db
@@ -24,7 +24,7 @@ class technologies{
     {
         $this->id_technologie = $id;
     }
- /**
+    /**
      * Lecture des categories (toutes)
      *
      * 
@@ -32,7 +32,7 @@ class technologies{
     public function lire(){
         try{
             //on écrit la requête sql *$this table permet d'aller dans la table definis au debut du code
-            $sql = "SELECT id_technologie, nom, logo, categories_idcategories  FROM " . $this->table;
+            $sql = "SELECT id_technologie, nom, logo, categories_idcategories  FROM " . $this->table . " WHERE `delete` = 0";
             //on prepare la requête
             $query = $this->connexion->prepare($sql);
             $query->execute();
@@ -51,73 +51,83 @@ class technologies{
      * 
      */
 
-    public function create(){
-        try{
-            //ecriture de la requête sql
-            $sql = " INSERT INTO " . $this->table . " SET nom=:nom, logo=:logo, categories_idcategories=:categories_idcategories ";
-            //préparer la requête
+    public function create($data) {
+        try {
+            // Vérifier si les champs requis existent dans les données
+            if (!isset($data->nom) || !isset($data->logo) || !isset($data->categories_idcategories)) {
+                return false; // Les champs requis sont manquants, la création n'est pas possible
+            }
+
+            // Échapper et nettoyer les champs
+            $nom = htmlspecialchars(strip_tags($data->nom));
+            $logo = htmlspecialchars(strip_tags($data->logo));
+            $categories_idcategories = htmlspecialchars(strip_tags($data->categories_idcategories));
+
+            // Écrire la requête SQL pour l'insertion
+            $sql = "INSERT INTO " . $this->table . "(nom, logo, categories_idcategories) VALUES(:nom, :logo, :categories_idcategories)";
+
+            // Préparer la requête
             $query = $this->connexion->prepare($sql);
 
-            //protection contre les injections
-            $this->nom=htmlspecialchars(strip_tags($this->nom));
-            $this->logo=htmlspecialchars(strip_tags($this->logo));
-            $this->categories_idcategories=htmlspecialchars(strip_tags($this->categories_idcategories));
+            // Lié les champs à la requête
+            $query->bindParam(":nom", $nom, PDO::PARAM_STR);
+            $query->bindParam(":logo", $logo, PDO::PARAM_STR);
+            $query->bindParam(":categories_idcategories", $categories_idcategories, PDO::PARAM_INT);
 
-            //ajout des données protégées
-            $query->bindParam(":nom", $this->nom,PDO::PARAM_STR);
-            $query->bindParam(":logo", $this->logo, PDO::PARAM_STR);
-            $query->bindParam(":categories_idcategories", $this->categories_idcategories, PDO::PARAM_INT);
-            //execution de la requête
-            if($query->execute()){
-                return true;
-            }else{
-                return false;
+            // Exécution de la requête
+            if ($query->execute()) {
+                return true; // Création réussie
+            } else {
+                return false; // Échec de la création
             }
-        }catch (PDOException $e){
+        } catch (PDOException $e) {
             // Gestion des erreurs de base de données
             return false;
         }
     }
-/**
+    /**
      * Mettre à jour une categorie
      *
      * 
      */
-    public function update(){
-        try{
-            //ecriture de la requête sql
-            $sql = " UPDATE " . $this->table . " SET nom=:nom, logo=:logo, categories_idcategories=:categories_idcategories WHERE id_technologie = :id_technologie";
-            //préparer la requête
-            $query = $this->connexion->prepare($sql);
-          // Protection contre les injections
-            
-        if ($this->nom !== null) {
-            $this->nom = htmlspecialchars(strip_tags($this->nom));
+    public function update($data) {
+        // Assurez-vous que l'ID de la technologie est défini
+        if (!isset($this->id_technologie)) {
+            return false; // ID manquant, la mise à jour est impossible
         }
-
-        if ($this->logo !== null) {
-            $this->logo = htmlspecialchars(strip_tags($this->logo));
+    
+        // Vérifiez si les données à mettre à jour sont fournies
+        if (empty($data)) {
+            return false; // Pas de données fournies, pas de mise à jour nécessaire
         }
-
-        if ($this->categories_idcategories !== null) {
-            $this->categories_idcategories = htmlspecialchars(strip_tags($this->categories_idcategories));
+    
+        // Construire la requête SQL pour la mise à jour
+        $sql = "UPDATE " . $this->table . " SET ";
+    
+        $params = array();
+        foreach ($data as $key => $value) {
+            // Échapper et ajouter chaque champ à la requête SQL
+            $key = htmlspecialchars(strip_tags($key));
+            $sql .= $key . " = :" . $key . ", ";
+            $params[":" . $key] = $value;
         }
-        
-        $query->bindParam(":id_technologie", $this->id, PDO::PARAM_INT);
-        $query->bindParam(":nom", $this->nom, PDO::PARAM_STR);
-        $query->bindParam(":logo", $this->logo, PDO::PARAM_STR);
-        $query->bindParam(":categories_idcategories", $this->categories_idcategories, PDO::PARAM_INT);
-        if($query->execute()){
-            
-                return true;
-            }else{
-                return false;
-            }
-        }catch(PDOException $e){
-             // Gestion des erreurs de base de données
+    
+        // Supprimer la virgule finale de la requête SQL
+        $sql = rtrim($sql, ', ');
+    
+        // Ajouter la clause WHERE pour identifier la ligne à mettre à jour
+        $sql .= " WHERE id_technologie = :id_technologie";
+        $params[':id_technologie'] = $this->id_technologie;
+    
+        // Exécuter la requête avec les paramètres
+        $query = $this->connexion->prepare($sql);
+        if ($query->execute($params)) {
+            return true;
+        } else {
             return false;
         }
     }
+    
     
     /**
      * Lecture des technologie (id)
@@ -126,10 +136,9 @@ class technologies{
      */
     public function lireId(){
         try{
-            $sql = "SELECT id_technologie, nom, logo, categories_idcategories FROM " . $this->table . " WHERE id_technologie = ? LIMIT 0,1";
+            $sql = "SELECT id_technologie, nom, logo, categories_idcategories FROM " . $this->table . " WHERE id_technologie = ? AND `delete` = 0 LIMIT 0,1";
             // On prépare la requête
             $query = $this->connexion->prepare($sql);
-    //      echo"SQL Query: " . $sql;
             $query->bindParam(1, $this->id_technologie);
             $query->execute();
 
@@ -142,4 +151,34 @@ class technologies{
                 return false;
             }
         }
+
+    /**
+     * Delete par suppression logique
+     *
+     * 
+     */
+    public function delete($id_technologie) {
+        // Vérifiez si des ressources sont attachées à cette technologie
+        $sqlCheckResources = "SELECT COUNT(*) FROM ressources WHERE technologies_id_technologie = :id_technologie";
+        $queryCheckResources = $this->connexion->prepare($sqlCheckResources);
+        $queryCheckResources->bindParam(":id_technologie", $id_technologie, PDO::PARAM_INT);
+        $queryCheckResources->execute();
+        $resourceCount = $queryCheckResources->fetchColumn();
+
+        if ($resourceCount > 0) {
+            // Des ressources sont attachées, renvoyez un message d'erreur
+            return ["message" => "Supprimez d'abord les ressources associées à cette technologie."];
+        } else {
+            // Aucune ressource n'est attachée, procédez à la suppression de la technologie
+            $sqlDelete = "UPDATE " . $this->table . "SET `delete`= 1 WHERE id_technologie = :id_technologie";
+            $queryDelete = $this->connexion->prepare($sqlDelete);
+            $queryDelete->bindParam(":id_technologie", $id_technologie, PDO::PARAM_INT);
+
+            if ($queryDelete->execute()) {
+                return ["message" => "La technologie a été supprimée avec succès."];
+            } else {
+                return ["message" => "Une erreur est survenue lors de la suppression de la technologie."];
+            }
+        }
     }
+}

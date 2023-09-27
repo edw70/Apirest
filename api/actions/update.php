@@ -1,4 +1,10 @@
 <?php
+// Inclure les fichiers et instancier la base de données
+require_once './database/connexion_db.php';
+require_once './modeles/technologies.php';
+require_once './modeles/ressources.php';
+require_once './modeles/categories.php';
+
 
 if ($_SERVER['REQUEST_METHOD'] == 'PUT') {
     // Obtenir l'URL demandée par l'utilisateur
@@ -12,27 +18,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'PUT') {
     // Diviser l'URI en segments
     $segments = explode('/', trim($uri, '/'));
 
-    // Assurez-vous qu'il y a au moins trois segments
-    if (count($segments) >= 3) {
+    // Assurez-vous qu'il y a au moins deux segments
+    if (count($segments) >= 2) {
         $table = $segments[0];
         $id = $segments[1];
-        $action = $segments[2];
 
-        // Inclure les fichiers et instancier la base de données
-        require_once './database/connexion_db.php';
-        require_once './modeles/technologies.php';
-        require_once './modeles/ressources.php';
-        require_once './modeles/categories.php';
         $database = new database();
         $db = $database->getConnection();
-
 
         try {
             // Créez une instance du modèle approprié
             $model = new $table($db);
             $model->setId($id);
 
-            if ($action === 'update' && method_exists($model, 'update')) {
+            if (method_exists($model, 'update')) {
                   // Lire les données de la requête PUT depuis php://input
                 $data = json_decode(file_get_contents("php://input"));
                 // Vérifiez si les données sont valides 
@@ -62,4 +61,5 @@ if ($_SERVER['REQUEST_METHOD'] == 'PUT') {
     http_response_code(405); // Method Not Allowed
     echo json_encode(["message" => "La méthode n'est pas autorisée"]);
 }
+
 
