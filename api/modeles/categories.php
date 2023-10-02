@@ -106,7 +106,7 @@ class categories{
         $sql = rtrim($sql, ', ');
 
         // Ajouter la clause WHERE pour identifier la ligne à mettre à jour
-        $sql .= " WHERE idcategories = :idcategories";
+        $sql .= " WHERE idcategories = :idcategories AND `delete` = 0";
         $params[':idcategories'] = $this->idcategories;
 
         // Exécuter la requête avec les paramètres

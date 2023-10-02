@@ -108,7 +108,7 @@ class ressources{
         $sql = rtrim($sql, ', ');
     
         // Ajouter la clause WHERE pour identifier la ligne à mettre à jour
-        $sql .= " WHERE id_ressources = :id_ressources";
+        $sql .= " WHERE id_ressources = :id_ressources AND `delete` = 0";
         $params[':id_ressources'] = $this->id_ressources;
     
         // Exécuter la requête avec les paramètres

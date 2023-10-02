@@ -1,4 +1,5 @@
 <?php
+
 class technologies{
     //Connexion
     private $connexion;
@@ -52,20 +53,36 @@ class technologies{
      */
 
     public function create($data) {
+
         try {
             // Vérifier si les champs requis existent dans les données
             if (!isset($data->nom) || !isset($data->logo) || !isset($data->categories_idcategories)) {
                 return false; // Les champs requis sont manquants, la création n'est pas possible
             }
 
-            // Échapper et nettoyer les champs
+            // Nettoyez et obtenez le nom de la technologie
             $nom = htmlspecialchars(strip_tags($data->nom));
-            $logo = htmlspecialchars(strip_tags($data->logo));
+            // Supprimez les espaces et convertissez le nom en minuscules
+            $nom = str_replace(' ', '_', strtolower($nom));
             $categories_idcategories = htmlspecialchars(strip_tags($data->categories_idcategories));
+            // Ajoutez "logo_" au début du nom
+            $logo = "logo_" . $nom;
+            // Récupérer l'extension du fichier téléchargé
+            $extension = pathinfo($_FILES['logo']['name'], PATHINFO_EXTENSION);
+            
+            
+            // Vérifier si l'extension est valide (SVG, PNG, JPEG ou WEBP)
+            if (!in_array($extension, ['svg', 'png', 'jpeg', 'webp'])){
+                return false; //extension de fichier non valide
+            }
+            // Enregistrez le fichier dans le répertoire souhaité
+            $chemin_repertoire = './logos/';
+            $chemin_complet_fichier = $chemin_repertoire . $logo . '.' . $extension;
+            
 
             // Écrire la requête SQL pour l'insertion
             $sql = "INSERT INTO " . $this->table . "(nom, logo, categories_idcategories) VALUES(:nom, :logo, :categories_idcategories)";
-
+            
             // Préparer la requête
             $query = $this->connexion->prepare($sql);
 
@@ -73,15 +90,25 @@ class technologies{
             $query->bindParam(":nom", $nom, PDO::PARAM_STR);
             $query->bindParam(":logo", $logo, PDO::PARAM_STR);
             $query->bindParam(":categories_idcategories", $categories_idcategories, PDO::PARAM_INT);
-
+        
             // Exécution de la requête
             if ($query->execute()) {
-                return true; // Création réussie
-            } else {
-                return false; // Échec de la création
+                
+                // Enregistrez le fichier dans le répertoire des logos
+                if(move_uploaded_file($_FILES['logo']['tmp_name'], $chemin_complet_fichier)){
+                
+                    return true; // Création réussie
+                } else {
+
+                    return false; // Échec de l'enregistrement du fichier
+                }
+            }else {
+            
+                return false; //Échec de la création
             }
         } catch (PDOException $e) {
             // Gestion des erreurs de base de données
+
             return false;
         }
     }
@@ -90,44 +117,56 @@ class technologies{
      *
      * 
      */
-    public function update($data) {
-        // Assurez-vous que l'ID de la technologie est défini
-        if (!isset($this->id_technologie)) {
-            return false; // ID manquant, la mise à jour est impossible
+    
+     public function updateTechnologie($id_technologie, $nom, $categories_idcategories, $nomFichier, $logoDataBinary) {
+        // var_dump($logoDataBinary);
+        // Vérifiez d'abord si l'enregistrement existe
+        $query = "SELECT * FROM technologies WHERE id_technologie = :id AND `delete` = 0";
+        $stmt = $this->connexion->prepare($query);
+        $stmt->bindParam(':id', $id_technologie);
+        $stmt->execute();
+
+        if ($stmt->rowCount() == 0) {
+            return false; // L'enregistrement n'existe pas, la mise à jour n'est pas possible
+            echo json_encode(["message" => "L'enregistrement n'existe pas, la mise à jour n'est pas possible"]);
         }
-    
-        // Vérifiez si les données à mettre à jour sont fournies
-        if (empty($data)) {
-            return false; // Pas de données fournies, pas de mise à jour nécessaire
-        }
-    
-        // Construire la requête SQL pour la mise à jour
-        $sql = "UPDATE " . $this->table . " SET ";
-    
-        $params = array();
-        foreach ($data as $key => $value) {
-            // Échapper et ajouter chaque champ à la requête SQL
-            $key = htmlspecialchars(strip_tags($key));
-            $sql .= $key . " = :" . $key . ", ";
-            $params[":" . $key] = $value;
-        }
-    
-        // Supprimer la virgule finale de la requête SQL
-        $sql = rtrim($sql, ', ');
-    
-        // Ajouter la clause WHERE pour identifier la ligne à mettre à jour
-        $sql .= " WHERE id_technologie = :id_technologie";
-        $params[':id_technologie'] = $this->id_technologie;
-    
-        // Exécuter la requête avec les paramètres
-        $query = $this->connexion->prepare($sql);
-        if ($query->execute($params)) {
-            return true;
+
+        // Mettez à jour les données de la technologie
+        $query = "UPDATE technologies SET nom = :nom, logo = :logo, categories_idcategories = :categories_idcategories WHERE id_technologie = :id";
+        $stmt = $this->connexion->prepare($query);
+        $stmt->bindParam(':id', $id_technologie);
+        $stmt->bindParam(':nom', $nom);
+        $stmt->bindParam(':logo', $nomFichier); // Le nom du fichier est utilisé comme logo
+        $stmt->bindParam(':categories_idcategories', $categories_idcategories);
+
+        if ($stmt->execute()) {
+            // Enregistrez le logo dans le fichier logo_(nom de la technologie).(extension du fichier chargé)
+            $path = "logos/";
+            var_dump($nom);
+            $logoFileName = "logo_" . $nom;
+            $temporaryFullPath = $path.$logoFileName;
+             //. "." . pathinfo($nomFichier, PATHINFO_EXTENSION);
+            file_put_contents($temporaryFullPath, $logoDataBinary);
+            $ext = mime_content_type($temporaryFullPath);
+            $recupExt = explode("/", $ext);
+            $fileFullPath = $temporaryFullPath.".".$recupExt[1];
+            rename ($temporaryFullPath, $fileFullPath);
+            // $result[] = ["extension"=>$recupExt[1]];
+        //    var_dump($recupExt);
+            return true; // Mise à jour réussie
         } else {
-            return false;
+            return false; // Échec de la mise à jour
         }
     }
+
     
+    
+
+
+    
+    
+    
+
     
     /**
      * Lecture des technologie (id)

@@ -29,16 +29,38 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $model = new $table($db);
 
             if (method_exists($model, 'create')) {
-                // Lire les données de la requête POST depuis php://input
-                $data = json_decode(file_get_contents("php://input"));
-                // Vérifiez si les données sont valides 
-            //    var_dump($data);
-                if ($data && $model->create($data)) { // Utilisez la fonction create
-                    http_response_code(201); // Created
-                    echo json_encode(["message" => "La ressource a été créée avec succès"]);
+                // Vérifiez si les données sont envoyées en tant que formulaire multipart
+                if ($table === 'technologies') {
+                    // Le traitement spécifique pour la table "technologies" avec la gestion du fichier logo
+                    if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
+                        $data = new stdClass();
+                        $data->nom = $_POST['nom'];
+                        $data->logo = $_FILES['logo']['tmp_name'];
+                        $data->categories_idcategories = $_POST['categories_idcategories'];
+                //        var_dump($data);
+                        if ($model->create($data)) {
+                            http_response_code(201); // Created
+                            echo json_encode(["message" => "La ressource a été créée avec succès"]);
+                        } else {
+                            http_response_code(500); // Internal Server Error
+                            echo json_encode(["message" => "Une erreur est survenue lors de la création de la technologie"]);
+                        }
+                    } else {
+                        http_response_code(400); // Bad Request
+                        echo json_encode(["message" => "Veuillez fournir un fichier logo valide"]);
+                    }
+                
                 } else {
-                    http_response_code(500); // Internal Server Error
-                    echo json_encode(["message" => "Une erreur est survenue lors de la création de la ressource"]);
+                    // Lire les données de la requête POST depuis php://input
+                    $data = json_decode(file_get_contents("php://input"));
+                    
+                    if ($data && $model->create($data)) { // Utilisez la fonction create
+                        http_response_code(201); // Created
+                        echo json_encode(["message" => "La ressource a été créée avec succès"]);
+                    } else {
+                        http_response_code(500); // Internal Server Error
+                        echo json_encode(["message" => "Une erreur est survenue lors de la création de la ressource"]);
+                    }
                 }
             } else {
                 http_response_code(400); // Bad Request
@@ -59,3 +81,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     http_response_code(405); // Method Not Allowed
     echo json_encode(["message" => "La méthode n'est pas autorisée"]);
 }
+
+
+

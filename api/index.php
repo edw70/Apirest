@@ -7,6 +7,9 @@ header("Access-Control-Allow-Origin: *");
 
 //Format des données envoyées
 header("Content-Type: application/json; charset=UTF8");
+// Spécifier le type de contenu multipart/form-data
+//header("Content-Type: multipart/form-data; charset=UTF-8");
+
 
 //methode autorisée
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE");
@@ -16,9 +19,10 @@ header("Access-Control-Max-Age: 3600"); //1h c'est le cache
 }
 
 // Fonction pour afficher la liste de toutes les routes
-function acceuil(){
+function accueil(){
     setCommonHeaders();
-    include './actions/lire.php';     //a modifier 
+    include './explicatif.php';     //a modifier 
+    
 }
 
 // Fonction pour lire toute la table technologies (GET)
