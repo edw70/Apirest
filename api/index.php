@@ -8,8 +8,6 @@ header("Access-Control-Allow-Origin: *");
 //Format des données envoyées
 header("Content-Type: application/json; charset=UTF8");
 // Spécifier le type de contenu multipart/form-data
-//header("Content-Type: multipart/form-data; charset=UTF-8");
-
 
 //methode autorisée
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE");

@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         $data->nom = $_POST['nom'];
                         $data->logo = $_FILES['logo']['tmp_name'];
                         $data->categories_idcategories = $_POST['categories_idcategories'];
-                //        var_dump($data);
+                
                         if ($model->create($data)) {
                             http_response_code(201); // Created
                             echo json_encode(["message" => "La ressource a été créée avec succès"]);
@@ -53,10 +53,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 } else {
                     // Lire les données de la requête POST depuis php://input
                     $data = json_decode(file_get_contents("php://input"));
-                    
-                    if ($data && $model->create($data)) { // Utilisez la fonction create
+                
+                    if ($data && $model->create($data)) { 
+                        // Utilisez la fonction create
                         http_response_code(201); // Created
-                        echo json_encode(["message" => "La ressource a été créée avec succès"]);
+                        echo json_encode(["message" => "La catégorie a été créée avec succès"]);
                     } else {
                         http_response_code(500); // Internal Server Error
                         echo json_encode(["message" => "Une erreur est survenue lors de la création de la ressource"]);
@@ -69,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } catch (Exception $e) {
             // Gestion des erreurs générales
             http_response_code(500); // Internal Server Error
-            echo json_encode(["message" => "Une erreur est survenue lors du traitement de la demande"]);
+            echo json_encode(["message" => $e->getMessage()]);
         }
     } else {
         // Mauvaise URL, on gère l'erreur

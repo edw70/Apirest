@@ -83,6 +83,10 @@
             {
                 "message": "La ressource a été créée avec succès"
             }
+
+
+
+            technologie put id obligatoire dans le champs fom-data
             </p>
 </body>
 </html>

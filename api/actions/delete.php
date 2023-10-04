@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'DELETE') {
                     http_response_code(400); // Bad Request
                     echo json_encode($result);
                 } else {
-                    http_response_code(204); // OK
+                    http_response_code(200); // OK
                     echo json_encode(["message" => "suppression effectuée avec succès"]);
                 }
             } else {
@@ -57,4 +57,4 @@ if ($_SERVER['REQUEST_METHOD'] == 'DELETE') {
     http_response_code(405); // Method Not Allowed
     echo json_encode(["message" => "La méthode n'est pas autorisée"]);
 }
-?>
+

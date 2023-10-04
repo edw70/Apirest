@@ -44,7 +44,7 @@ class categories{
      * 
      */
 
-     public function create($data) {
+    public function create($data) {
         try {
             // Vérifier si le champ 'nom' existe dans les données
             if (!isset($data->nom)) {
@@ -53,14 +53,20 @@ class categories{
     
             // Échapper et nettoyer le champ 'nom'
             $nom = htmlspecialchars(strip_tags($data->nom));
-    
-            //  requête SQL pour l'insertion
-            $sql = "INSERT INTO " . $this->table . "(nom) VALUES(:nom)";
-    
+            // Vérifier si le nom de la catégorie existe déjà dans la base de données
+            $sql_check = "SELECT idcategories FROM " . $this->table . " WHERE nom = :nom";
+            $query_check = $this->connexion->prepare($sql_check);
+            $query_check->bindParam(":nom", $nom, PDO::PARAM_STR);
+            $query_check->execute();
+
+            if ($query_check->rowCount() > 0) {
+                throw new Exception("Catégorie déjà existante");
+            } 
+            // Requête SQL pour l'insertion
+            $sql = " INSERT INTO " . $this->table . " (nom) VALUES (:nom)";
             // Préparer la requête
             $query = $this->connexion->prepare($sql);
-    
-            // Lié le champ 'nom' à la requête
+            // Lier le champ 'nom' à la requête
             $query->bindParam(":nom", $nom, PDO::PARAM_STR);
     
             // Exécution de la requête
@@ -69,18 +75,22 @@ class categories{
             } else {
                 return false; // Échec de la création
             }
+        
         } catch (PDOException $e) {
             // Gestion des erreurs de base de données
+            echo json_encode(["message" => $e->getMessage()]);
             return false;
         }
     }
     
-/**
+    
+/********************************************************************************
      * Mettre à jour une categorie
      *
      * 
      */
     public function update($data) {
+        
         // Assurez-vous que l'ID de la catégorie est défini
         if (!isset($this->idcategories)) {
             return false; // ID manquant, la mise à jour est impossible
@@ -118,63 +128,87 @@ class categories{
         }
     }
 
-   // Fonction pour définir l'ID
-public function setId($id)
-{
-    $this->idcategories = $id;
-}
-/**
+   // Fonction pour définir l'ID****************************************************************
+    public function setId($id)
+    {
+        $this->idcategories = $id;
+    }
+
+/***********************************************************************************************
  * Lecture des categories (id)
  *
  * 
  */
-public function lireId(){
-    try{
-        $sql = "SELECT idcategories, nom FROM " . $this->table . " WHERE idcategories = ? AND `delete` = 0 LIMIT 0,1";
-        // On prépare la requête
-        $query = $this->connexion->prepare($sql);
-        $query->bindParam(1, $this->idcategories);
-        $query->execute();
 
-        // On retourne le résultat
-        return $query;
-    } catch (PDOException $e){
-        // Gestion des erreurs de base de données
-        error_log("Erreur PDO dans la méthode lireId(): " . $e->getMessage());
-        return false;
+    public function lireId(){
+        try{
+            $sql = "SELECT c.idcategories, c.nom AS nom_categorie, t.id_technologie, t.nom AS nom_technologie
+                    FROM " . $this->table . " c
+                    INNER JOIN technologies t ON c.idcategories = t.categories_idcategories
+                    WHERE c.idcategories = ? AND c.delete = 0";
+            // On prépare la requête
+            $query = $this->connexion->prepare($sql);
+            $query->bindParam(1, $this->idcategories);
+            $query->execute();
+
+            // On retourne le résultat
+            return $query;
+        } catch (PDOException $e){
+            // Gestion des erreurs de base de données
+            error_log("Erreur PDO dans la méthode lireIdAvecTechnologies(): " . $e->getMessage());
+            return false;
+        }
     }
-}
 
     
 
-/**
+/************************************************************************************
  * Delete par suppression logique
  *
  * 
  */
-public function delete($idcategories) {
-    // Vérifiez si des technologies sont liées à cette catégorie
-    $sqlCheckTechnologies = "SELECT COUNT(*) FROM technologies WHERE categories_idcategories = :idcategories";
-    $queryCheckTechnologies = $this->connexion->prepare($sqlCheckTechnologies);
-    $queryCheckTechnologies->bindParam(":idcategories", $idcategories, PDO::PARAM_INT);
-    $queryCheckTechnologies->execute();
-    $technologyCount = $queryCheckTechnologies->fetchColumn();
+    public function delete($idcategories) {
+        // Vérifiez si des technologies sont liées à cette catégorie
+        $sqlCheckTechnologies = "SELECT COUNT(*) FROM technologies WHERE categories_idcategories = :idcategories";
+        $queryCheckTechnologies = $this->connexion->prepare($sqlCheckTechnologies);
+        $queryCheckTechnologies->bindParam(":idcategories", $idcategories, PDO::PARAM_INT);
+        $queryCheckTechnologies->execute();
+        $categoriesCount = $queryCheckTechnologies->fetchColumn();
 
-    if ($technologyCount > 0) {
-        // Des technologies sont liées, renvoyez un message d'erreur
-        return ["message" => "Supprimez ou modifier d'abord les technologies associées à cette catégorie."];
-    } else {
-        // Aucune technologie n'est liée, procédez à la suppression de la catégorie
-        $sqlDelete = "UPDATE " . $this->table . " SET `delete` = 1 WHERE idcategories = :idcategories";
-        $queryDelete = $this->connexion->prepare($sqlDelete);
-        $queryDelete->bindParam(":idcategories", $idcategories, PDO::PARAM_INT);
-
-        if ($queryDelete->execute()) {
-            return ["message" => "La catégorie a été supprimée avec succès."];
+        if ($categoriesCount > 0) {
+            // Il y a des technologies associées, vérifiez si toutes les technologies sont marquées comme supprimées (delete = 1)
+            $sqlCheckTechnologyStatus = "SELECT COUNT(*) FROM technologies WHERE categories_idcategories = :idcategories AND `delete` = 0";
+            $queryCheckTechnologyStatus = $this->connexion->prepare($sqlCheckTechnologyStatus);
+            $queryCheckTechnologyStatus->bindParam(":idcategories", $idcategories, PDO::PARAM_INT);
+            $queryCheckTechnologyStatus->execute();
+            $activeTechnologyCount = $queryCheckTechnologyStatus->fetchColumn();
+            
+            if ($activeTechnologyCount > 0) {
+                // Il y a des technologies actives, renvoyez un message d'erreur
+                return ["message" => "Impossible de supprimer la catégorie. Certaines technologies sont actives."];
+            } else {
+                // Aucune technologie n'est attachée, procédez à la suppression de la catégorie
+                $sqlDelete = "UPDATE " . $this->table . " SET `delete` = 1 WHERE idcategories = :idcategories";
+                $queryDelete = $this->connexion->prepare($sqlDelete);
+                $queryDelete->bindParam(":idcategories", $idcategories, PDO::PARAM_INT);
+                
+                if ($queryDelete->execute()) {
+                    return ["message" => "La catégorie a été supprimée avec succès."];
+                } else {
+                    return ["message" => "Une erreur est survenue lors de la suppression de la catégorie."];
+                }
+            }
         } else {
-            return ["message" => "Une erreur est survenue lors de la suppression de la catégorie."];
+            // Aucune technologie n'est attachée à cette catégorie, procédez à la suppression de la catégorie
+            $sqlDelete = "UPDATE " . $this->table . " SET `delete` = 1 WHERE idcategories = :idcategories";
+            $queryDelete = $this->connexion->prepare($sqlDelete);
+            $queryDelete->bindParam(":idcategories", $idcategories, PDO::PARAM_INT);
+            
+            if ($queryDelete->execute()) {
+                return ["message" => "La catégorie a été supprimée avec succès."];
+            } else {
+                return ["message" => "Une erreur est survenue lors de la suppression de la catégorie."];
+            }
         }
     }
-}
-
 }

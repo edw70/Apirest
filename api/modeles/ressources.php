@@ -77,7 +77,7 @@ class ressources{
             return false;
         }
     }
-/**
+/*********************************************************************************
      * Mettre à jour une categorie
      *
      * 
@@ -121,65 +121,67 @@ class ressources{
     }
     
 
- // Fonction pour définir l'ID
+ // Fonction pour définir l'ID**************************************************
 public function setId($id)
 {
     $this->id_ressources = $id;
 }
-/**
- * Lecture des technologie (id)
+/**********************************************************************************
+ * Lecture des ressources (id)
  *
  * 
  */
-public function lireId(){
-    try{
-        $sql = "SELECT id_ressources, url_ressource,  technologies_id_technologie FROM " . $this->table . " WHERE id_ressources = ? AND `delete` = 0 LIMIT 0,1";
-        // On prépare la requête
-        $query = $this->connexion->prepare($sql);
-//      echo"SQL Query: " . $sql;
-        $query->bindParam(1, $this->id_ressources);
-        $query->execute();
-
-        //on retourne le resultat
-        return $query;
-        }catch (PDOException $e){
+    public function lireId(){
+        try{
+            $sql = "SELECT r.id_ressources, r.url_ressource, t.id_technologie, t.nom AS nom_technologie
+                    FROM " . $this->table . " r
+                    INNER JOIN technologies t ON r.technologies_id_technologie = t.id_technologie
+                    WHERE r.id_ressources = ? AND r.delete = 0";
+            // On prépare la requête
+            $query = $this->connexion->prepare($sql);
+            $query->bindParam(1, $this->id_ressources);
+            $query->execute();
+    
+            // On retourne le résultat
+            return $query;
+        } catch (PDOException $e){
             // Gestion des erreurs de base de données
-            error_log("Erreur PDO dans la méthode lireId(): " . $e->getMessage());
-            
+            error_log("Erreur PDO dans la méthode lireIdAvecTechnologie(): " . $e->getMessage());
             return false;
         }
     }
-    /**
+    
+    /*******************************************************************************
  * Delete par suppression logique
  *
  * 
  */
-public function delete($id) { 
-try {
-    
-    // Requête SQL pour effectuer la suppression logique (mettre delete à 1)
-    $sql = "UPDATE " . $this->table . " SET `delete` = 1 WHERE id_ressources = :id_ressources";
-    
-
-        // Préparez la requête
-        $query = $this->connexion->prepare($sql);
+    public function delete($id) { 
+    try {
         
-        // Lier l'ID de la ressource à supprimer
-        $query->bindParam(":id_ressources", $id, PDO::PARAM_INT);
+        // Requête SQL pour effectuer la suppression logique (mettre delete à 1)
+        $sql = "UPDATE " . $this->table . " SET `delete` = 1 WHERE id_ressources = :id_ressources";
+        
 
-        // Exécutez la requête
-        if ($query->execute()) {
-    
-            return true; // La ressource a été supprimée avec succès (marquée comme supprimée)
-        } else {
-            return false; // Une erreur est survenue lors de la suppression de la ressource
+            // Préparez la requête
+            $query = $this->connexion->prepare($sql);
+            
+            // Lier l'ID de la ressource à supprimer
+            $query->bindParam(":id_ressources", $id, PDO::PARAM_INT);
+
+            // Exécutez la requête
+            if ($query->execute()) {
+        
+                return true; // La ressource a été supprimée avec succès (marquée comme supprimée)
+            } else {
+                return false; // Une erreur est survenue lors de la suppression de la ressource
+            }
+        } catch (PDOException $e) {
+            // Gestion des erreurs de base de données
+
+            return false;
         }
-    } catch (PDOException $e) {
-        // Gestion des erreurs de base de données
-
-        return false;
     }
-}
 
 
 }
