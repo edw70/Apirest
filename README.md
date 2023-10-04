@@ -1,11 +1,11 @@
 # Apirest
 
-    ##Présentation de l'API
-    ###API de Gestion de Ressources
+    <h1> Présentation de l'API</h1>
+    <h2>API de Gestion de Ressources</h2>
     Bienvenue sur l'API de gestion de ressources, une interface pour gérer des catégories, des technologies et des ressources.
     Cette API suit les conventions RESTful et offre un ensemble complet d'opérations pour vous permettre de créer, lire, mettre à jour et supprimer ces ressources.
 
-    ##Comment Utiliser l'API
+    <h2>Comment Utiliser l'API</h2>
 
     L'API est accessible via des requêtes HTTP standard. Voici comment utiliser chaque opération :
 
