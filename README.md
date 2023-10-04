@@ -53,12 +53,16 @@ Créer une Technologie (tous les champs sont obligatoires)
 URL : POST /technologies
 Exemple : POST /technologies
 Données : form-data
-Exemple : [Insérer ici un exemple de données form-data]
+Exemple : 
+![image](https://github.com/edw70/Apirest/assets/133671255/9cdbef41-b7b7-4300-ab3c-752202b8457c)
+
 
 Mettre à Jour une Technologie (id obligatoire)
 URL : PUT /technologies/{id}
 Données : form-data
-Exemple : [Insérer ici un exemple de données form-data]
+Exemple : 
+![image](https://github.com/edw70/Apirest/assets/133671255/8b8a7892-ae5d-4924-a431-e41d5fabdb4b)
+
 
 ### Remarques importantes :
 Pour supprimer une catégorie ou une technologie, assurez-vous que toutes les ressources associées ont été supprimées au préalable.
