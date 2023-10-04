@@ -32,7 +32,7 @@ L'API est accessible via des requêtes HTTP standard. Voici comment utiliser cha
       "technologies_id_technologie": 1
   }
   ```
-Mettre à Jour une Ressource ou une catégorie
+#### Mettre à Jour une Ressource ou une catégorie
 URL : PUT /ressources/{id} ou PUT /categories/{id}
 Exemple : PUT /ressources/2
 Données : JSON représentant la ressource mise à jour
@@ -44,20 +44,18 @@ Exemple :
     "technologies_id_technologie": 2
 }
 ```
-
-Supprimer un {id} d'une table (categories, technologies, ressources)
+#### Supprimer un {id} d'une table (categories, technologies, ressources)
 URL : DELETE /ressources/{id}
 Exemple : DELETE /ressources/1
 
-Créer une Technologie (tous les champs sont obligatoires)
+#### Créer une Technologie (tous les champs sont obligatoires)
 URL : POST /technologies
 Exemple : POST /technologies
 Données : form-data
 Exemple : 
 ![image](https://github.com/edw70/Apirest/assets/133671255/9cdbef41-b7b7-4300-ab3c-752202b8457c)
 
-
-Mettre à Jour une Technologie (id obligatoire)
+#### Mettre à Jour une Technologie (id obligatoire)
 URL : PUT /technologies/{id}
 Données : form-data
 Exemple : 
